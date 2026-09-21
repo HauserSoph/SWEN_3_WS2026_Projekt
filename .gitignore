@@ -1,0 +1,35 @@
+## .NET
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+project.lock.json
+project.fragment.lock.json
+
+## NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+## IDEs
+.vs/
+.idea/
+*.swp
+*~
+.DS_Store
+
+## Cursor (nur lokal, nicht ins Remote-Repo)
+.cursor/
+.cursorignore
+
+## Test / coverage
+TestResults/
+coverage/
+*.coverage
+*.coveragexml

@@ -1,0 +1,5 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Paperless.Domain\Paperless.Domain.csproj" />
+  </ItemGroup>
+</Project>
