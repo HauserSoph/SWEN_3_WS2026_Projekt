@@ -6,7 +6,7 @@ using Paperless.Business;
 using Paperless.Dal;
 
 // Contains the application's starting point.
-public partial class Program
+public class Program
 {
     // Sets up the API and starts the web server.
     public static void Main(string[] args)

@@ -27,7 +27,6 @@ public class UpdateDocumentDto
 {
     [Required, StringLength(200)]
     public string Title { get; init; }
-
     [Required, StringLength(255)]
     public string FileName { get; init; }
 
@@ -67,7 +66,6 @@ public class CreateNoteDto
 {
     [Required, StringLength(2000)]
     public string Text { get; init; }
-
     public CreateNoteDto(string text)
     {
         Text = text;
@@ -78,13 +76,9 @@ public class CreateNoteDto
 public class DocumentNoteDto
 {
     public Guid Id { get; init; }
-
     public Guid DocumentId { get; init; }
-
     public string Text { get; init; }
-
     public DateTimeOffset CreatedAt { get; init; }
-
     public DocumentNoteDto(Guid id, Guid documentId, string text, DateTimeOffset createdAt)
     {
         Id = id;
