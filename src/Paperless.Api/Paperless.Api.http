@@ -1,6 +1,53 @@
-@Paperless.Api_HostAddress = http://localhost:5257
+@baseUrl = http://localhost:5257
+# Replace after POST. Requires the real repository to be registered by the DAL teammate.
+@documentId = 00000000-0000-0000-0000-000000000000
 
-GET {{Paperless.Api_HostAddress}}/health
-Accept: text/plain
+### Create document metadata (201; copy returned id above)
+POST {{baseUrl}}/api/documents
+Content-Type: application/json
 
-###
+{
+  "title": "Rechnung",
+  "fileName": "rechnung.pdf"
+}
+
+### List documents (200)
+GET {{baseUrl}}/api/documents
+
+### Read document (200)
+GET {{baseUrl}}/api/documents/{{documentId}}
+
+### Update editable metadata (200)
+PUT {{baseUrl}}/api/documents/{{documentId}}
+Content-Type: application/json
+
+{
+  "title": "Gepruefte Rechnung",
+  "fileName": "rechnung.pdf"
+}
+
+### Add note (201)
+POST {{baseUrl}}/api/documents/{{documentId}}/notes
+Content-Type: application/json
+
+{
+  "text": "Betrag vor Freigabe pruefen."
+}
+
+### Read notes (200)
+GET {{baseUrl}}/api/documents/{{documentId}}/notes
+
+### Invalid input (400)
+POST {{baseUrl}}/api/documents
+Content-Type: application/json
+
+{
+  "title": "",
+  "fileName": "rechnung.pdf"
+}
+
+### Delete document (204)
+DELETE {{baseUrl}}/api/documents/{{documentId}}
+
+### Deleted document (404)
+GET {{baseUrl}}/api/documents/{{documentId}}
