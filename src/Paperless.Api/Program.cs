@@ -2,6 +2,7 @@ using MapsterMapper;
 using Paperless.Api.Errors;
 using Paperless.Api.Mapping;
 using Paperless.Business;
+using Paperless.Dal;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,13 +16,10 @@ builder.Services.AddSingleton(MappingConfiguration.Create());
 builder.Services.AddScoped<IMapper, Mapper>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 
-// TODO (integration with DAL teammate, Sprint 1): add the API -> DAL project reference
-// and register the PostgreSQL DbContext and the implementation of IDocumentRepository here.
-// Example once her class exists: AddScoped<IDocumentRepository, DocumentRepository>().
-// The repository must persist documents and notes; deleting a document must also delete its notes.
-// Until registration is added, normal Development startup fails dependency validation.
-// The HTTP tests supply a mocked repository; they do not verify database persistence.
-// After integration: create a document, restart the API and read it again to verify persistence.
+// Datenbank anbinden.
+var connectionString = builder.Configuration.GetConnectionString("Paperless")
+    ?? throw new InvalidOperationException("Connection string 'Paperless' fehlt.");
+DalAssembly.AddDatabase(builder.Services, connectionString);
 
 var app = builder.Build();
 app.UseExceptionHandler();
