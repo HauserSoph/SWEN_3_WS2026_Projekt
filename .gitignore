@@ -24,10 +24,6 @@ project.fragment.lock.json
 *~
 .DS_Store
 
-## Cursor (nur lokal, nicht ins Remote-Repo)
-.cursor/
-.cursorignore
-
 ## Test / coverage
 TestResults/
 coverage/

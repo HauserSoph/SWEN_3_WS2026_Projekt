@@ -1,27 +1,15 @@
 # Paperless
 
-Dokumentenmanagement-System (SWEN3, WS 2026): Archivierung, OCR, Volltextsuche und KI-Zusammenfassungen.
+Unser Projekt für SWEN3 ist ein Dokumentenmanagement-System.
 
-**Stack:** C# / .NET 10 / ASP.NET Core
+## Unser Stand für Sprint 1
 
-## Struktur
+Wir haben versucht, die REST-Schnittstelle und die Business-Logik umzusetzen. Bisher gibt es Code zum Anlegen, Anzeigen, Ändern und Löschen von Dokument-Metadaten. Außerdem können Notizen zu Dokumenten hinzugefügt werden.
 
-```
-src/Paperless.Api        REST-Server
-src/Paperless.Business   Fachlogik
-src/Paperless.Dal        Datenzugriff
-src/Paperless.Domain     Entitäten
-tests/Paperless.UnitTests
-```
+Für IoC verwenden wir Dependency Injection. Das Mapping zwischen den Datenobjekten machen wir mit Mapster.
 
-## Loslegen
+## Was noch fehlt
 
-Voraussetzung: [.NET 10 SDK](https://dotnet.microsoft.com/download)
+Die Datenbank ist noch nicht angebunden. Deshalb startet die API allein noch nicht. Als Nächstes müssen wir die Teile zusammenfügen und prüfen, ob die Daten wirklich gespeichert werden.
 
-```bash
-dotnet build Paperless.sln
-dotnet test Paperless.sln
-dotnet run --project src/Paperless.Api
-```
-
-Health-Check: `GET http://localhost:5257/health` → `ok`
+PDF-Dateien können wir bisher noch nicht hochladen. Docker ist in diesem Stand nicht enthalten.
