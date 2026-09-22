@@ -1,9 +1,7 @@
 namespace Paperless.Domain;
 
-/// Absichtlich leere Markerklasse, mit der der Smoke-Test die Domain-Assembly erkennt.
-/// Document, DocumentNote und IDocumentRepository stehen bereits in eigenen Dateien.
-/// Plan: weitere benoetigte Fachmodelle ebenfalls hier im Domain-Projekt ergaenzen,
-/// ohne HTTP-, Datenbank- oder Messaging-Abhaengigkeiten.
+// Plan: add future shared models here without HTTP, database or messaging dependencies.
+// Keeps the original project marker; shared models remain in their own files.
 public static class DomainAssembly
 {
 }

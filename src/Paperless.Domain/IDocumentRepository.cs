@@ -1,20 +1,20 @@
 namespace Paperless.Domain;
 
-// Shared contract: neither business code nor callers need to know EF Core.
+// Defines the data-access contract without depending on database code.
 public interface IDocumentRepository
 {
-    /// Loads all stored documents; returns an empty list when none exist.
+    // Requires an asynchronous method that returns the documents as a list.
     Task<IReadOnlyList<Document>> GetAllAsync(CancellationToken ct = default);
-    /// Loads a document by ID, returning null when it does not exist.
+    // Requires a document lookup that returns null when the ID is missing.
     Task<Document?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    /// Persists a new document before completing.
+    // Requires the repository to save a new document before completing.
     Task AddAsync(Document document, CancellationToken ct = default);
-    /// Persists changes to an existing document before completing.
+    // Requires the repository to save document changes before completing.
     Task UpdateAsync(Document document, CancellationToken ct = default);
-    /// Deletes the document and its associated notes before completing.
+    // Requires the repository to delete the document and its notes.
     Task DeleteAsync(Document document, CancellationToken ct = default);
-    /// Loads notes belonging to the specified document; may return an empty list.
+    // Requires an asynchronous method that returns the notes for a document.
     Task<IReadOnlyList<DocumentNote>> GetNotesAsync(Guid documentId, CancellationToken ct = default);
-    /// Persists a new note linked to its parent document before completing.
+    // Requires the repository to save a new note before completing.
     Task AddNoteAsync(DocumentNote note, CancellationToken ct = default);
 }

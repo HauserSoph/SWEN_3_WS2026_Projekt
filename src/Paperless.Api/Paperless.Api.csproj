@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
-    <PackageReference Include="Mapster" Version="7.4.0" />
+    <PackageReference Include="AutoMapper" Version="15.1.3" />
     <ProjectReference Include="..\Paperless.Business\Paperless.Business.csproj" />
     <ProjectReference Include="..\Paperless.Dal\Paperless.Dal.csproj" />
   </ItemGroup>

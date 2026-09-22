@@ -1,27 +1,25 @@
-using Mapster;
+using AutoMapper;
 using Paperless.Api.Contracts;
 using Paperless.Business;
 using Paperless.Domain;
 
 namespace Paperless.Api.Mapping;
 
-public static class MappingConfiguration
+// Groups the AutoMapper rules in one profile.
+public class MappingConfiguration : Profile
 {
-    /// Builds and compiles the mappings between API DTOs, business commands and domain models.
-    public static TypeAdapterConfig Create()
+    // Registers the mappings when this profile is created.
+    public MappingConfiguration()
     {
-        var config = new TypeAdapterConfig { RequireExplicitMapping = true };
-        config.NewConfig<CreateDocumentDto, CreateDocumentCommand>()
-            .MapWith(dto => new CreateDocumentCommand(dto.Title, dto.FileName));
-        config.NewConfig<UpdateDocumentDto, UpdateDocumentCommand>()
-            .MapWith(dto => new UpdateDocumentCommand(dto.Title, dto.FileName));
-        config.NewConfig<CreateNoteDto, CreateNoteCommand>()
-            .MapWith(dto => new CreateNoteCommand(dto.Text));
-        config.NewConfig<Document, DocumentDto>()
-            .MapWith(d => new DocumentDto(d.Id, d.Title, d.FileName, d.CreatedAt));
-        config.NewConfig<DocumentNote, DocumentNoteDto>()
-            .MapWith(n => new DocumentNoteDto(n.Id, n.DocumentId, n.Text, n.CreatedAt));
-        config.Compile();
-        return config;
+        // Maps create-request fields to the business command.
+        CreateMap<CreateDocumentDto, CreateDocumentCommand>();
+        // Maps update-request fields to the business command.
+        CreateMap<UpdateDocumentDto, UpdateDocumentCommand>();
+        // Maps note input to the business command.
+        CreateMap<CreateNoteDto, CreateNoteCommand>();
+        // Maps a document to the response DTO.
+        CreateMap<Document, DocumentDto>();
+        // Maps a note to the response DTO.
+        CreateMap<DocumentNote, DocumentNoteDto>();
     }
 }
