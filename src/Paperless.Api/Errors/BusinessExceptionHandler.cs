@@ -4,26 +4,45 @@ using Paperless.Business;
 
 namespace Paperless.Api.Errors;
 
-// Business code knows no HTTP status codes. Translation belongs at the API boundary.
-public sealed class BusinessExceptionHandler : IExceptionHandler
+// Converts known business errors into HTTP responses.
+public class BusinessExceptionHandler : IExceptionHandler
 {
-    /// Converts known business errors to HTTP 400 or 404; leaves other errors to the default handler.
+    // Handles known errors and returns false for other errors.
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken ct)
     {
-        var status = exception switch
+        int status;
+        string title;
+        // Checks whether the business input was invalid.
+        if (exception is BusinessValidationException)
         {
-            BusinessValidationException => StatusCodes.Status400BadRequest,
-            DocumentNotFoundException => StatusCodes.Status404NotFound,
-            _ => 0
-        };
-        if (status == 0) return false;
+            status = StatusCodes.Status400BadRequest;
+            title = "Invalid input";
+        }
+        // Checks whether a document was missing.
+        else if (exception is DocumentNotFoundException)
+        {
+            status = StatusCodes.Status404NotFound;
+            title = "Document not found";
+        }
+        // Leaves all other errors to the remaining error handling.
+        else
+        {
+            // Reports that this handler did not handle the error.
+            return false;
+        }
+        // Sets the response's HTTP status.
         context.Response.StatusCode = status;
-        await context.Response.WriteAsJsonAsync(new ProblemDetails
-        {
-            Status = status,
-            Title = status == 400 ? "Invalid input" : "Document not found",
-            Detail = exception.Message
-        }, cancellationToken: ct);
+        // Creates a standard error response object.
+        ProblemDetails problem = new ProblemDetails();
+        // Includes the status code in the response body.
+        problem.Status = status;
+        // Includes the short error title.
+        problem.Title = title;
+        // Includes the explanation from the business exception.
+        problem.Detail = exception.Message;
+        // Sends the error response as JSON.
+        await context.Response.WriteAsJsonAsync(problem, cancellationToken: ct);
+        // Reports that the error has been handled.
         return true;
     }
 }

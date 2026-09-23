@@ -1,9 +1,8 @@
 namespace Paperless.Business;
 
-/// Absichtlich leere Markerklasse fuer das Business-Projekt; hier kommt keine Fachlogik hinein.
-/// Die Sprint-1-Logik liegt bereits in DocumentService.
-/// Plan fuer spaetere Sprints: Upload-Workflows und die Anbindung von Queue und Suche
-/// als eigene Services ergaenzen; OCR-Verarbeitung nicht im HTTP-Request ausfuehren.
+// Plan for later sprints: add upload, queue and search services in separate classes.
+// Keep OCR processing outside the HTTP request.
+// Keeps the original project marker; business rules belong in DocumentService.
 public static class BusinessAssembly
 {
 }
