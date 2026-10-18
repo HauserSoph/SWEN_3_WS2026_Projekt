@@ -9,13 +9,26 @@ Bisher geht es um Dokument-Metadaten und Notizen, noch nicht um PDF-Dateiinhalte
 Die DAL und die Registrierung des Repositorys sind inzwischen im Code vorhanden.
 Ob alles mit der echten Datenbank zusammenspielt, müssen wir noch gemeinsam prüfen.
 
-## Unsere zwei Tests
+## Backend-Tests und Validierung
 
-- Ein Dokument mit Titel wird zum Speichern an das Repository übergeben.
-- Ein Dokument ohne Titel wird abgelehnt und nicht gespeichert.
+Die API prüft Eingaben weiterhin mit `[Required]` und `[StringLength]`.
+Die Business-Schicht behält die bestehende Textprüfung mit Trim und
+`BusinessValidationException` bei. Zusätzlich werden fehlende Commands und
+leere Dokument-IDs abgelehnt.
 
-Die Tests verwenden ein Mock-Repository statt einer Datenbank.
-Sie prüfen nur diese zwei Fälle, nicht alle Endpunkte oder die echte Speicherung.
+Dokumente und Notizen verwenden dieselben Pflichtfelder und Längengrenzen
+auch im Domain-/Datenbankmodell: Titel 200, Dateiname 255, Notiztext 2000 Zeichen.
+Der DbContext prüft neue und geänderte Objekte vor jedem Speichern mit
+DataAnnotations. Dadurch werden ungültige Daten auch bei direkter DAL-Nutzung
+abgelehnt. Datenbankänderungen an bestehenden Tabellen werden nicht automatisch
+ausgeführt; die Modellgrenzen gelten beim Neuanlegen der Tabellen. Die Prüfung
+vor dem Speichern greift auch bei einer bereits bestehenden Datenbank.
+
+Aktuell bestehen 21 Tests. Sie prüfen ungültige Eingaben, Grenzwerte,
+fehlende Commands, leere IDs, unveränderte Daten nach ungültigen Updates sowie
+API-Attribute und DAL-Validierung. Die Business-Tests verwenden ein
+Mock-Repository. Die DAL-Tests prüfen ungültige Daten vor dem Datenbankzugriff;
+sie sind kein Nachweis für funktionierende PostgreSQL-Persistenz.
 
 **Visual Studio:** Test → Test-Explorer → Alle Tests ausführen.
 

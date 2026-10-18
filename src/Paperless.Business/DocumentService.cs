@@ -29,6 +29,10 @@ public class DocumentService : IDocumentService
     // Loads a document or reports that it does not exist.
     public async Task<Document> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
+        if (id == Guid.Empty)
+        {
+            throw new BusinessValidationException("Document ID must not be empty.");
+        }
         // Looks up the document
         Document? document = await repository.GetByIdAsync(id, ct);
         // Checks whether the repository found a document.
@@ -43,6 +47,10 @@ public class DocumentService : IDocumentService
     // Creates a document from the supplied business input.
     public async Task<Document> CreateAsync(CreateDocumentCommand command, CancellationToken ct = default)
     {
+        if (command == null)
+        {
+            throw new BusinessValidationException("Document input is required.");
+        }
         // Creates an empty document object.
         Document document = new Document();
         // Gives the new document a unique ID.
@@ -63,6 +71,10 @@ public class DocumentService : IDocumentService
     // Updates the editable metadata of an existing document.
     public async Task<Document> UpdateAsync(Guid id, UpdateDocumentCommand command, CancellationToken ct = default)
     {
+        if (command == null)
+        {
+            throw new BusinessValidationException("Document input is required.");
+        }
         // Validates the new title before changing the existing document.
         string title = RequiredText(command.Title, 200, "Title");
         // Validates the new file name before changing the existing document.
@@ -103,6 +115,10 @@ public class DocumentService : IDocumentService
     // Defines the business operation for adding a note to a document.
     public async Task<DocumentNote> AddNoteAsync(Guid documentId, CreateNoteCommand command, CancellationToken ct = default)
     {
+        if (command == null)
+        {
+            throw new BusinessValidationException("Note input is required.");
+        }
         // Trims and validates the note with a 2000-character limit.
         string text = RequiredText(command.Text, 2000, "Note text");
         // Checks that the parent document exists before working with its notes.
