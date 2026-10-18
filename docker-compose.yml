@@ -13,8 +13,8 @@ services:
 
   api:
     build: 
-        context: src/Paperless.REST
-        dockerfile: Dockerfile
+        context: .
+        dockerfile: src/Paperless.REST/Dockerfile
     ports:
       - "8080:8080"
     environment:
