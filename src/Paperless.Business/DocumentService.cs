@@ -21,6 +21,7 @@ public class DocumentService : IDocumentService
     {
         // Waits for the repository to load the documents.
         IReadOnlyList<Document> documents = await repository.GetAllAsync(ct);
+        Console.WriteLine($"Business: Loaded {documents.Count} documents.");
         // Returns the loaded list.
         return documents;
     }
@@ -35,6 +36,7 @@ public class DocumentService : IDocumentService
         {
             throw new DocumentNotFoundException(id);
         }
+        Console.WriteLine($"Business: Loaded document {id}.");
         return document;
     }
 
@@ -53,6 +55,7 @@ public class DocumentService : IDocumentService
         document.CreatedAt = clock.GetUtcNow();
         // Waits for the repository to save the new document.
         await repository.AddAsync(document, ct);
+        Console.WriteLine($"Business: Created document {document.Id}.");
         // Returns the document to the caller.
         return document;
     }
@@ -72,6 +75,7 @@ public class DocumentService : IDocumentService
         document.FileName = fileName;
         // Waits for the repository to save the changes.
         await repository.UpdateAsync(document, ct);
+        Console.WriteLine($"Business: Updated document {id}.");
         // Returns the document to the caller.
         return document;
     }
@@ -82,6 +86,7 @@ public class DocumentService : IDocumentService
         Document document = await GetByIdAsync(id, ct);
         // Asks the repository to delete the document and its notes.
         await repository.DeleteAsync(document, ct);
+        Console.WriteLine($"Business: Deleted document {id}.");
     }
 
     // Defines the business operation for listing a document's notes.
@@ -90,7 +95,9 @@ public class DocumentService : IDocumentService
         // Checks that the parent document exists before working with its notes.
         await GetByIdAsync(documentId, ct);
         // Loads and returns the notes belonging to that document.
-        return await repository.GetNotesAsync(documentId, ct);
+        IReadOnlyList<DocumentNote> notes = await repository.GetNotesAsync(documentId, ct);
+        Console.WriteLine($"Business: Loaded {notes.Count} notes for document {documentId}.");
+        return notes;
     }
 
     // Defines the business operation for adding a note to a document.
@@ -112,6 +119,7 @@ public class DocumentService : IDocumentService
         note.CreatedAt = clock.GetUtcNow();
         // Waits for the repository to save the note.
         await repository.AddNoteAsync(note, ct);
+        Console.WriteLine($"Business: Added note {note.Id} to document {documentId}.");
         // Returns the new note to the caller.
         return note;
     }

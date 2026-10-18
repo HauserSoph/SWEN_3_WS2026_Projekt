@@ -47,3 +47,15 @@ Der aktuelle Compose-Datenbankdienst gibt diesen Port nicht an Windows frei.
 Deshalb ist ein nur im Compose-Netz laufendes PostgreSQL für diesen lokalen Start nicht ausreichend.
 
 Das Mapping verwendet AutoMapper 15 wie in den Folien. Ein vorhandener Lizenzschlüssel kann über die Umgebungsvariable `AUTOMAPPER_KEY` gesetzt werden.
+
+## Logging
+
+Einfache Console.WriteLine-Aufrufe protokollieren API-Aufrufe, geladene Dokumente
+und Notizen, erfolgreiches Erstellen/Ändern/Löschen, Datenbankzugriffe und Fehler.
+Beim API-Start und beim Beenden werden ebenfalls Meldungen ausgegeben.
+Fehlgeschlagene Datenbankzugriffe werden protokolliert und die Exception danach
+weitergegeben. Validierungsfehler und fehlende Dokumente werden im bestehenden
+BusinessExceptionHandler protokolliert; unerwartete API-Fehler ebenfalls.
+IDs und Anzahlen werden ausgegeben, Titel und Notiztexte nicht.
+Die Logs erscheinen in der Konsole oder über `docker compose logs -f api`.
+Es gibt keinen eigenen Logger und keine zusätzliche Logging-Bibliothek.

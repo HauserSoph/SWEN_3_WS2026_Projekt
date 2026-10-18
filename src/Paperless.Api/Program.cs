@@ -4,6 +4,7 @@ using Paperless.Api.Errors;
 using Paperless.Api.Mapping;
 using Paperless.Business;
 using Paperless.Dal;
+using Microsoft.AspNetCore.Mvc;
 
 // Contains the application's starting point.
 public class Program
@@ -11,46 +12,65 @@ public class Program
     // Sets up the API and starts the web server.
     public static void Main(string[] args)
     {
-        // Creates the builder and reads the application settings.
-        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-        // Registers support for API controllers.
-        builder.Services.AddControllers();
-        // Registers support for standard error responses.
-        builder.Services.AddProblemDetails();
-        // Registers our business error handler.
-        builder.Services.AddExceptionHandler<BusinessExceptionHandler>();
-        // Shares the system clock across the application.
-        builder.Services.AddSingleton(TimeProvider.System);
-        // Uses the named method below to configure AutoMapper.
-        builder.Services.AddAutoMapper(ConfigureMapping);
-        // Creates a business service for each request.
-        builder.Services.AddScoped<IDocumentService, DocumentService>();
-
-        // Reads the existing database connection settings.
-        string? connectionString = builder.Configuration.GetConnectionString("Paperless");
-        // Checks whether the connection settings are missing.
-        if (connectionString == null)
+        try
         {
-            // Stops startup when the required setting is missing.
-            throw new InvalidOperationException("Connection string 'Paperless' missing.");
-        }
-        // Calls the existing database setup without changing it.
-        DalAssembly.AddDatabase(builder.Services, connectionString);
+            // Creates the builder and reads the application settings.
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+            // Registers support for API controllers.
+            builder.Services.AddControllers();
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                var defaultResponse = options.InvalidModelStateResponseFactory;
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    Console.WriteLine("Warning: API request rejected because the input is invalid.");
+                    return defaultResponse(context);
+                };
+            });
+            // Registers support for standard error responses.
+            builder.Services.AddProblemDetails();
+            // Registers our business error handler.
+            builder.Services.AddExceptionHandler<BusinessExceptionHandler>();
+            // Shares the system clock across the application.
+            builder.Services.AddSingleton(TimeProvider.System);
+            // Uses the named method below to configure AutoMapper.
+            builder.Services.AddAutoMapper(ConfigureMapping);
+            // Creates a business service for each request.
+            builder.Services.AddScoped<IDocumentService, DocumentService>();
 
-        // Builds the application and its dependency container.
-        WebApplication app = builder.Build();
-        // Gets the registered mapper from the container.
-        IMapper mapper = app.Services.GetRequiredService<IMapper>();
-        // Checks that all mapping rules are valid.
-        mapper.ConfigurationProvider.AssertConfigurationIsValid();
-        // Enables the error handler for incoming requests.
-        app.UseExceptionHandler();
-        // Calls GetHealth when a request reaches /health.
-        app.MapGet("/health", GetHealth);
-        // Connects incoming requests to controller methods.
-        app.MapControllers();
-        // Starts the web server.
-        app.Run();
+            // Reads the existing database connection settings.
+            string? connectionString = builder.Configuration.GetConnectionString("Paperless");
+            // Checks whether the connection settings are missing.
+            if (connectionString == null)
+            {
+                // Stops startup when the required setting is missing.
+                throw new InvalidOperationException("Connection string 'Paperless' missing.");
+            }
+            // Calls the existing database setup without changing it.
+            DalAssembly.AddDatabase(builder.Services, connectionString);
+
+            // Builds the application and its dependency container.
+            WebApplication app = builder.Build();
+            // Gets the registered mapper from the container.
+            IMapper mapper = app.Services.GetRequiredService<IMapper>();
+            // Checks that all mapping rules are valid.
+            mapper.ConfigurationProvider.AssertConfigurationIsValid();
+            // Enables the error handler for incoming requests.
+            app.UseExceptionHandler();
+            // Calls GetHealth when a request reaches /health.
+            app.MapGet("/health", GetHealth);
+            // Connects incoming requests to controller methods.
+            app.MapControllers();
+            // Starts the web server.
+            Console.WriteLine("API: Starting web server.");
+            app.Run();
+            Console.WriteLine("API: Web server stopped.");
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine($"Error: API could not start or stopped unexpectedly: {exception}");
+            throw;
+        }
     }
 
     // Sets up AutoMapper using the existing mapping profile.

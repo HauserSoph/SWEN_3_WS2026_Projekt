@@ -27,9 +27,11 @@ public class BusinessExceptionHandler : IExceptionHandler
         // Leaves all other errors to the remaining error handling.
         else
         {
+            Console.WriteLine($"Error: API request failed: {exception}");
             // Reports that this handler did not handle the error.
             return false;
         }
+        Console.WriteLine($"Warning: {exception.Message}");
         // Sets the response's HTTP status.
         context.Response.StatusCode = status;
         // Creates a standard error response object.

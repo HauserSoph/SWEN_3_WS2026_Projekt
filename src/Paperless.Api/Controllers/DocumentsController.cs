@@ -32,6 +32,7 @@ public class DocumentsController : ControllerBase
     // Returns all documents as response DTOs.
     public async Task<ActionResult<IReadOnlyList<DocumentDto>>> GetAll(CancellationToken ct)
     {
+        Console.WriteLine("API: GET /api/documents");
         // Loads the documents through the business service.
         IReadOnlyList<Document> documents = await service.GetAllAsync(ct);
         // Creates the list that will be sent to the caller.
@@ -53,6 +54,7 @@ public class DocumentsController : ControllerBase
     // Returns one document or lets the error handler report a missing ID.
     public async Task<ActionResult<DocumentDto>> GetById(Guid id, CancellationToken ct)
     {
+        Console.WriteLine($"API: GET /api/documents/{id}");
         // Loads the requested document.
         Document document = await service.GetByIdAsync(id, ct);
         // Converts the document into a response DTO.
@@ -66,6 +68,7 @@ public class DocumentsController : ControllerBase
     // Creates a document from the request data.
     public async Task<ActionResult<DocumentDto>> Create(CreateDocumentDto dto, CancellationToken ct)
     {
+        Console.WriteLine("API: POST /api/documents");
         // Converts the request into business input.
         CreateDocumentCommand command = mapper.Map<CreateDocumentCommand>(dto);
         // Asks the business service to create the document.
@@ -85,6 +88,7 @@ public class DocumentsController : ControllerBase
     // Updates the title and file name of a document.
     public async Task<ActionResult<DocumentDto>> Update(Guid id, UpdateDocumentDto dto, CancellationToken ct)
     {
+        Console.WriteLine($"API: PUT /api/documents/{id}");
         // Converts the request into business input.
         UpdateDocumentCommand command = mapper.Map<UpdateDocumentCommand>(dto);
         // Asks the service to update the document.
@@ -100,6 +104,7 @@ public class DocumentsController : ControllerBase
     // Deletes the document through the business service.
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
+        Console.WriteLine($"API: DELETE /api/documents/{id}");
         // Waits until the service finishes deleting the document.
         await service.DeleteAsync(id, ct);
         // Returns HTTP 204 without a response body.
@@ -111,6 +116,7 @@ public class DocumentsController : ControllerBase
     // Returns the notes belonging to a document.
     public async Task<ActionResult<IReadOnlyList<DocumentNoteDto>>> GetNotes(Guid id, CancellationToken ct)
     {
+        Console.WriteLine($"API: GET /api/documents/{id}/notes");
         // Loads the notes through the business service.
         IReadOnlyList<DocumentNote> notes = await service.GetNotesAsync(id, ct);
         // Creates the response list.
@@ -132,6 +138,7 @@ public class DocumentsController : ControllerBase
     // Adds a note to the requested document.
     public async Task<ActionResult<DocumentNoteDto>> AddNote(Guid id, CreateNoteDto dto, CancellationToken ct)
     {
+        Console.WriteLine($"API: POST /api/documents/{id}/notes");
         // Converts the request into business input.
         CreateNoteCommand command = mapper.Map<CreateNoteCommand>(dto);
         // Asks the service to create the note.
