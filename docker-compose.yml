@@ -31,4 +31,7 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      ConnectionStrings__API: Host=localhost;Port=8080
+      API_BASE_URL: ${API_BASE_URL:-http://api:8080}
+    depends_on:
+      api:
+        condition: service_started

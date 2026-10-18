@@ -52,6 +52,12 @@ Danach im Browser [http://localhost:8080/health](http://localhost:8080/health) �
 Dort sollte `ok` stehen. Unter [http://localhost:8080/api/documents](http://localhost:8080/api/documents) werden die Dokumente abgefragt.
 `/health` allein prüft noch keine Datenbankverbindung.
 
+Alternativ kann die Angular-Oberfläche unter [http://localhost](http://localhost) geöffnet werden.
+Nginx leitet API-Aufrufe unter `/api` intern an den API-Container weiter. Der API-Container wird über `GET /health` geprüft; dieser Endpoint bestätigt nur, dass die API antwortet, und prüft nicht die Datenbankverbindung.
+
+Die API-Routen sind `GET /api/documents`, `GET /api/documents/{id}`, `POST /api/documents`, `PUT /api/documents/{id}`, `DELETE /api/documents/{id}`, `GET /api/documents/{id}/notes` und `POST /api/documents/{id}/notes`.
+
+
 **Direkt in Visual Studio:** Rechtsklick auf `Paperless.Api` → Als Startprojekt festlegen.
 Das Startprofil `http` auswählen und mit F5 starten.
 Dann [http://localhost:5257/health](http://localhost:5257/health) öffnen.
