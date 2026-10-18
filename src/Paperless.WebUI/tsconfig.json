@@ -1,0 +1,22 @@
+{
+  // Festlegen, wie TypeScript den Code verarbeitet
+  "compilerOptions": {
+    // Moderne JavaScript-Funktionen und Browser-Typen verwenden
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    // Die Imports für das Angular-Build-Werkzeug beibehalten
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    // Angular-Komponenten mit @Component erlauben
+    "experimentalDecorators": true,
+    // Fehler im eigenen Code prüfen, Bibliotheks-Typprüfungen überspringen
+    "strict": true,
+    "skipLibCheck": true
+  },
+  // Auch die Angular-HTML-Vorlagen auf Fehler prüfen
+  "angularCompilerOptions": {
+    "strictTemplates": true
+  },
+  // Die TypeScript-Dateien im src-Ordner verwenden
+  "include": ["src/**/*.ts"]
+}

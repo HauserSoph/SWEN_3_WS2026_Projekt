@@ -12,7 +12,9 @@ services:
       retries: 20
 
   api:
-    build: .
+    build: 
+        context: src/Paperless.REST
+        dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
@@ -20,3 +22,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+        
+  webui:
+    build: 
+        context: src/Paperless.WebUI
+        dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      ConnectionStrings__API: Host=localhost;Port=8080
