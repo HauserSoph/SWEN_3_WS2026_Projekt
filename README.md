@@ -24,7 +24,9 @@ abgelehnt. Datenbankänderungen an bestehenden Tabellen werden nicht automatisch
 ausgeführt; die Modellgrenzen gelten beim Neuanlegen der Tabellen. Die Prüfung
 vor dem Speichern greift auch bei einer bereits bestehenden Datenbank.
 
-Aktuell bestehen 21 Tests. Sie prüfen ungültige Eingaben, Grenzwerte,
+Aktuell bestehen 25 Tests. Vier Tests prüfen erfolgreiche Dokumenterstellung,
+Updates mit unveränderter ID und Erstellzeit, Löschen und das Anlegen von Notizen.
+Die weiteren Tests prüfen ungültige Eingaben, Grenzwerte,
 fehlende Commands, leere IDs, unveränderte Daten nach ungültigen Updates sowie
 API-Attribute und DAL-Validierung. Die Business-Tests verwenden ein
 Mock-Repository. Die DAL-Tests prüfen ungültige Daten vor dem Datenbankzugriff;
