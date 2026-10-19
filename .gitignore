@@ -29,3 +29,6 @@ TestResults/
 coverage/
 *.coverage
 *.coveragexml
+
+# Docker container maped volumes folder
+.data/
