@@ -1,13 +1,14 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 import { DocumentApiService } from './document-api.service';
 import { apiErrorMessage } from './api-error-message';
 import { Document, DocumentNote } from './document.models';
 
 @Component({
     selector: 'app-document-detail',
-    imports: [RouterLink, FormsModule],
+    imports: [RouterLink, FormsModule, DatePipe],
     template: `
         <h2>Dokumentdetails</h2>
         @if (loading) {
@@ -21,7 +22,7 @@ import { Document, DocumentNote } from './document.models';
                 <dt>Dateiname</dt>
                 <dd>{{ document.fileName }}</dd>
                 <dt>Erstellt</dt>
-                <dd>{{ document.createdAt }}</dd>
+                <dd>{{ document.createdAt | date:'dd.MM.yyyy HH:mm' }}</dd>
             </dl>
 
             <h3>Metadaten bearbeiten</h3>
@@ -44,7 +45,7 @@ import { Document, DocumentNote } from './document.models';
             } @else {
                 <ul>
                     @for (note of notes; track note.id) {
-                        <li>{{ note.text }} ({{ note.createdAt }})</li>
+                        <li>{{ note.text }} ({{ note.createdAt | date:'dd.MM.yyyy HH:mm' }})</li>
                     }
                 </ul>
             }

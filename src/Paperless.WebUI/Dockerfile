@@ -15,7 +15,8 @@ ENV NGINX_ENVSUBST_VARS='$API_BASE_URL'
 
 COPY --from=build /app/dist/paperless-webui/browser/ /usr/share/nginx/html/
 
-# Nginx renders this template with the container environment at startup.
+# Unsere Webserver-Konfiguration verwenden
+ENV API_BASE_URL=http://api:8080
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 # Die Webseite über HTTP bereitstellen
