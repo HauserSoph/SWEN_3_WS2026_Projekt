@@ -2,8 +2,10 @@ using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Paperless.Api.Contracts;
+using Paperless.Api.Messaging;
 using Paperless.Business;
 using Paperless.Domain;
+using Microsoft.Extensions.Options;
 
 namespace Paperless.Api.Controllers;
 // ApiController prüft die DTO-Attribute vor dem Methodenaufruf und liefert bei Fehlern 400.
@@ -17,11 +19,16 @@ public class DocumentsController : ControllerBase
 
     private readonly IDocumentService service;
     private readonly IMapper mapper;
-    public DocumentsController(IDocumentService service, IMapper mapper, ILogger<DocumentsController> logger)
+    private readonly IDocumentUploadPublisher uploadPublisher;
+    private readonly RabbitMqOptions rabbitMqOptions;
+    public DocumentsController(IDocumentService service, IMapper mapper, ILogger<DocumentsController> logger,
+        IDocumentUploadPublisher uploadPublisher, IOptions<RabbitMqOptions> rabbitMqOptions)
     {
         this.logger = logger;
         this.service = service;
         this.mapper = mapper;
+        this.uploadPublisher = uploadPublisher;
+        this.rabbitMqOptions = rabbitMqOptions.Value;
     }
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<DocumentDto>>> GetAll(CancellationToken ct)
@@ -45,6 +52,7 @@ public class DocumentsController : ControllerBase
         return Ok(response);
     }
     [HttpPost]
+    [Consumes("application/json")]
     public async Task<ActionResult<DocumentDto>> Create(CreateDocumentDto dto, CancellationToken ct)
     {
         logger.LogInformation("API: POST /api/documents");
@@ -55,6 +63,55 @@ public class DocumentsController : ControllerBase
         routeValues.Add("id", document.Id);
         // 201 bedeutet erstellt. Der Location-Header verweist auf die URL des neuen Dokuments.
         return CreatedAtAction(nameof(GetById), routeValues, response);
+    }
+
+    [HttpPost]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(50 * 1024 * 1024)]
+    public async Task<ActionResult<DocumentDto>> Upload([FromForm] string title, [FromForm] IFormFile file, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 200)
+        {
+            throw new BusinessValidationException("Title must contain between 1 and 200 characters.");
+        }
+        if (file == null || file.Length == 0)
+        {
+            throw new BusinessValidationException("A non-empty file is required.");
+        }
+        if (file.FileName.Length > 255)
+        {
+            throw new BusinessValidationException("File name must contain between 1 and 255 characters.");
+        }
+
+        string fileName = Path.GetFileName(file.FileName);
+        string incomingPath = Path.GetFullPath(rabbitMqOptions.IncomingPath);
+        Directory.CreateDirectory(incomingPath);
+        string stagedFilePath = Path.Combine(incomingPath, $"{Guid.NewGuid():N}.upload");
+        try
+        {
+            await using (FileStream stream = System.IO.File.Create(stagedFilePath))
+            {
+                await file.CopyToAsync(stream, ct);
+            }
+
+            Document document = await service.CreateAsync(
+                new CreateDocumentCommand(title, fileName), ct);
+            DocumentUploadJob job = new DocumentUploadJob(
+                1, document.Id, fileName, file.ContentType ?? "application/octet-stream", file.Length, stagedFilePath);
+            await uploadPublisher.PublishAsync(job, ct);
+
+            DocumentDto response = mapper.Map<DocumentDto>(document);
+            RouteValueDictionary routeValues = new RouteValueDictionary { ["id"] = document.Id };
+            return AcceptedAtAction(nameof(GetById), routeValues, response);
+        }
+        catch
+        {
+            if (System.IO.File.Exists(stagedFilePath))
+            {
+                System.IO.File.Delete(stagedFilePath);
+            }
+            throw;
+        }
     }
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<DocumentDto>> Update(Guid id, UpdateDocumentDto dto, CancellationToken ct)

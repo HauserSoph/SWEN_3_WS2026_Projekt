@@ -2,9 +2,11 @@ using AutoMapper;
 using System.Reflection;
 using Paperless.Api.Errors;
 using Paperless.Api.Mapping;
+using Paperless.Api.Messaging;
 using Paperless.Business;
 using Paperless.Dal;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 public class Program
 {
     public static void Main(string[] args)
@@ -31,6 +33,8 @@ public class Program
             builder.Services.AddExceptionHandler<BusinessExceptionHandler>();
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddAutoMapper(ConfigureMapping);
+            builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMQ"));
+            builder.Services.AddSingleton<IDocumentUploadPublisher, RabbitMqDocumentUploadPublisher>();
             // Scoped bedeutet: innerhalb einer Anfrage dieselbe Instanz.
             // Der DbContext und das Repository haben dieselbe Lebensdauer.
             builder.Services.AddScoped<IDocumentService, DocumentService>();

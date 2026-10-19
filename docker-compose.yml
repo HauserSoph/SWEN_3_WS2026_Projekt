@@ -19,12 +19,22 @@ services:
         dockerfile: src/Paperless.REST/Dockerfile
     ports:
       - "8080:8080"
+    volumes:
+      - ./.data/uploads:/app/uploads:rw
     environment:
       ConnectionStrings__Paperless: Host=postgres;Port=5432;Database=paperless;Username=paperless;Password=paperless
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__UserName: ${RABBITMQ_USER:-rabbitmq}
+      RabbitMQ__Password: ${RABBITMQ_PASS:-rabbitmq}
+      RabbitMQ__IncomingPath: /app/uploads/incoming
+      RabbitMQ__ProcessedPath: /app/uploads/processed
     depends_on:
       postgres:
         condition: service_healthy
-        
+      rabbitmq:
+        condition: service_healthy
+
   webui:
     build: 
         context: src/Paperless.WebUI
@@ -33,14 +43,11 @@ services:
       - "80:80"
       - "443:443"
     environment:
-<<<<<<< Updated upstream
-      ConnectionStrings__API: Host=localhost;Port=8080
-=======
       API_BASE_URL: ${API_BASE_URL:-http://api:8080}
     depends_on:
       api:
         condition: service_started
-     
+
   rabbitmq:
     image: rabbitmq:4.2-rc-management-alpine
     ports:
@@ -56,4 +63,3 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
->>>>>>> Stashed changes
