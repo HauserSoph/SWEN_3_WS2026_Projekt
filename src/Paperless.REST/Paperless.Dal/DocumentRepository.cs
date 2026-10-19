@@ -1,32 +1,37 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Paperless.Domain;
 
 namespace Paperless.Dal;
-
-/// Liest und speichert Dokumente und Notizen in PostgreSQL.
 public sealed class DocumentRepository : IDocumentRepository
 {
+    // Der eingebaute Logger wird durch Dependency Injection übergeben.
+    private readonly ILogger<DocumentRepository> logger;
+
     private readonly PaperlessDbContext db;
 
-    public DocumentRepository(PaperlessDbContext db)
+    public DocumentRepository(PaperlessDbContext db, ILogger<DocumentRepository> logger)
     {
+        this.logger = logger;
         this.db = db;
         try
         {
-            // Tabellen anlegen, falls sie noch fehlen. wird erst beim ersten tatsächlichen dokument anfrage/hochladen ausgeführt
+            // Beim Erzeugen des Repositorys prüfen wir, ob überhaupt Tabellen vorhanden sind.
+            // CreateTables legt das Modell nur an, wenn keine Tabellen existieren.
+            // Bestehende Tabellen werden damit nicht aktualisiert; dafür wären Migrationen nötig.
             var creator = db.Database.GetService<IRelationalDatabaseCreator>()!;
             if (!creator.HasTables())
             {
-                Console.WriteLine("DAL: Creating missing database tables.");
+                logger.LogInformation("DAL: Creating missing database tables.");
                 creator.CreateTables();
-                Console.WriteLine("DAL: Database tables created.");
+                logger.LogInformation("DAL: Database tables created.");
             }
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Console.WriteLine($"Error: DAL database initialization failed: {exception}");
+            logger.LogError(exception, "Error: DAL database initialization failed");
             throw;
         }
     }
@@ -36,12 +41,12 @@ public sealed class DocumentRepository : IDocumentRepository
         try
         {
             IReadOnlyList<Document> documents = await db.Documents.ToListAsync(ct);
-            Console.WriteLine($"DAL: Read {documents.Count} documents.");
+            logger.LogInformation("DAL: Read {DocumentCount} documents.", documents.Count);
             return documents;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Console.WriteLine($"Error: DAL reading documents failed: {exception}");
+            logger.LogError(exception, "Error: DAL reading documents failed");
             throw;
         }
     }
@@ -50,14 +55,13 @@ public sealed class DocumentRepository : IDocumentRepository
     {
         try
         {
-            //gib mir das dokument mit der übergebenen Id, oder null, falls es nicht existiert
             Document? document = await db.Documents.FirstOrDefaultAsync(document => document.Id == id, ct);
-            Console.WriteLine($"DAL: Looked up document {id}; found: {document != null}.");
+            logger.LogInformation("DAL: Looked up document {DocumentId}; found: {Found}.", id, document != null);
             return document;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Console.WriteLine($"Error: DAL reading document failed: {exception}");
+            logger.LogError(exception, "Error: DAL reading document failed");
             throw;
         }
     }
@@ -66,15 +70,14 @@ public sealed class DocumentRepository : IDocumentRepository
     {
         try
         {
-            //add erstellt nur das objekt, speicert es aber noch nicht
+            // Add merkt das Objekt im DbContext vor. Erst SaveChangesAsync schreibt in die Datenbank.
             db.Documents.Add(document);
-            //hier wird gespichert
             await db.SaveChangesAsync(ct);
-            Console.WriteLine($"DAL: Saved document {document.Id}.");
+            logger.LogInformation("DAL: Saved document {DocumentId}.", document.Id);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Console.WriteLine($"Error: DAL saving document failed: {exception}");
+            logger.LogError(exception, "Error: DAL saving document failed");
             throw;
         }
     }
@@ -83,14 +86,13 @@ public sealed class DocumentRepository : IDocumentRepository
     {
         try
         {
-            //geleiche wie oben
             db.Documents.Update(document);
             await db.SaveChangesAsync(ct);
-            Console.WriteLine($"DAL: Updated document {document.Id}.");
+            logger.LogInformation("DAL: Updated document {DocumentId}.", document.Id);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Console.WriteLine($"Error: DAL updating document failed: {exception}");
+            logger.LogError(exception, "Error: DAL updating document failed");
             throw;
         }
     }
@@ -99,14 +101,13 @@ public sealed class DocumentRepository : IDocumentRepository
     {
         try
         {
-            //gleiches wie oben
             db.Documents.Remove(document);
             await db.SaveChangesAsync(ct);
-            Console.WriteLine($"DAL: Deleted document {document.Id}.");
+            logger.LogInformation("DAL: Deleted document {DocumentId}.", document.Id);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Console.WriteLine($"Error: DAL deleting document failed: {exception}");
+            logger.LogError(exception, "Error: DAL deleting document failed");
             throw;
         }
     }
@@ -115,14 +116,15 @@ public sealed class DocumentRepository : IDocumentRepository
     {
         try
         {
-            //gib mir die note bei der die Note_id (FK) zur übergebenen DocumentId passt
+            // DocumentId ist der Fremdschlüssel zum Dokument. EF übersetzt den Filter in SQL;
+            // ToListAsync führt die Abfrage aus.
             IReadOnlyList<DocumentNote> notes = await db.Notes.Where(note => note.DocumentId == documentId).ToListAsync(ct);
-            Console.WriteLine($"DAL: Read {notes.Count} notes for document {documentId}.");
+            logger.LogInformation("DAL: Read {NoteCount} notes for document {DocumentId}.", notes.Count, documentId);
             return notes;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Console.WriteLine($"Error: DAL reading notes failed: {exception}");
+            logger.LogError(exception, "Error: DAL reading notes failed");
             throw;
         }
     }
@@ -133,11 +135,11 @@ public sealed class DocumentRepository : IDocumentRepository
         {
             db.Notes.Add(note);
             await db.SaveChangesAsync(ct);
-            Console.WriteLine($"DAL: Saved note {note.Id} for document {note.DocumentId}.");
+            logger.LogInformation("DAL: Saved note {NoteId} for document {DocumentId}.", note.Id, note.DocumentId);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Console.WriteLine($"Error: DAL saving note failed: {exception}");
+            logger.LogError(exception, "Error: DAL saving note failed");
             throw;
         }
     }

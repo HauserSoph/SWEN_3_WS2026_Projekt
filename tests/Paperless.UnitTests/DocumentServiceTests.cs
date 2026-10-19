@@ -1,9 +1,11 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Paperless.Business;
 using Paperless.Domain;
 
 namespace Paperless.UnitTests;
 
+// NullLogger erfüllt die Logger-Abhängigkeit, ohne während der Tests Logs auszugeben.
 public class DocumentServiceTests
 {
     [Fact]
@@ -16,7 +18,7 @@ public class DocumentServiceTests
         clock.Setup(c => c.GetUtcNow()).Returns(now);
         // Replace the database with a mock, but use the real business service.
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
-        DocumentService service = new DocumentService(repository.Object, clock.Object);
+        DocumentService service = new DocumentService(repository.Object, clock.Object, NullLogger<DocumentService>.Instance);
         // The command contains the input that would normally arrive from the API.
         CreateDocumentCommand command = new CreateDocumentCommand("Invoice", "invoice.pdf");
 
@@ -52,7 +54,7 @@ public class DocumentServiceTests
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
         repository.Setup(r => r.GetByIdAsync(documentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(document);
-        DocumentService service = new DocumentService(repository.Object, TimeProvider.System);
+        DocumentService service = new DocumentService(repository.Object, TimeProvider.System, NullLogger<DocumentService>.Instance);
         UpdateDocumentCommand command = new UpdateDocumentCommand("Updated", "updated.pdf");
 
         // Change the document's title and file name through the service.
@@ -83,7 +85,7 @@ public class DocumentServiceTests
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
         repository.Setup(r => r.GetByIdAsync(document.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(document);
-        DocumentService service = new DocumentService(repository.Object, TimeProvider.System);
+        DocumentService service = new DocumentService(repository.Object, TimeProvider.System, NullLogger<DocumentService>.Instance);
 
         // Ask the real service to delete the document by its ID.
         await service.DeleteAsync(document.Id);
@@ -108,7 +110,7 @@ public class DocumentServiceTests
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
         repository.Setup(r => r.GetByIdAsync(document.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(document);
-        DocumentService service = new DocumentService(repository.Object, clock.Object);
+        DocumentService service = new DocumentService(repository.Object, clock.Object, NullLogger<DocumentService>.Instance);
         CreateNoteCommand command = new CreateNoteCommand("Check the invoice.");
 
         // Add the note through the real business service.
@@ -130,7 +132,7 @@ public class DocumentServiceTests
         // Creates a mock repository so this test needs no database.
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
         // Creates the real service using the mock repository and system clock.
-        DocumentService service = new DocumentService(repository.Object, TimeProvider.System);
+        DocumentService service = new DocumentService(repository.Object, TimeProvider.System, NullLogger<DocumentService>.Instance);
 
         // Stores the invalid input for this test.
         CreateDocumentCommand command = new CreateDocumentCommand("", "rechnung.pdf");

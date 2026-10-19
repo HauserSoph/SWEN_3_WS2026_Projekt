@@ -70,7 +70,7 @@ public sealed class PaperlessDbContext(DbContextOptions<PaperlessDbContext> opti
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // zeigt wie die Beziehung zwischen Dokumenten und Notizen ist
+        // Zeigt wie die Beziehung zwischen Dokumenten und Notizen ist
          modelBuilder.Entity<DocumentNote>()
             .HasOne<Document>()
             .WithMany()

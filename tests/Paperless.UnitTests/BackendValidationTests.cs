@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -9,6 +10,7 @@ using Paperless.Domain;
 
 namespace Paperless.UnitTests;
 
+// NullLogger erfüllt die Logger-Abhängigkeit, ohne während der Tests Logs auszugeben.
 public class BackendValidationTests
 {
     [Theory]
@@ -21,7 +23,7 @@ public class BackendValidationTests
     {
         // Use a fake repository so this test does not need PostgreSQL.
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
-        DocumentService service = new DocumentService(repository.Object, TimeProvider.System);
+        DocumentService service = new DocumentService(repository.Object, TimeProvider.System, NullLogger<DocumentService>.Instance);
 
         // The ! lets us deliberately pass null in the test; it does not check the value.
         await Assert.ThrowsAsync<BusinessValidationException>(() =>
@@ -39,7 +41,7 @@ public class BackendValidationTests
     {
         // Use a fake repository so this test does not need PostgreSQL.
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
-        DocumentService service = new DocumentService(repository.Object, TimeProvider.System);
+        DocumentService service = new DocumentService(repository.Object, TimeProvider.System, NullLogger<DocumentService>.Instance);
 
         await Assert.ThrowsAsync<BusinessValidationException>(() => service.CreateAsync(
             new CreateDocumentCommand(new string('t', titleLength), new string('f', fileNameLength))));
@@ -54,7 +56,7 @@ public class BackendValidationTests
     {
         // Use a fake repository so this test does not need PostgreSQL.
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
-        DocumentService service = new DocumentService(repository.Object, TimeProvider.System);
+        DocumentService service = new DocumentService(repository.Object, TimeProvider.System, NullLogger<DocumentService>.Instance);
 
         await Assert.ThrowsAsync<BusinessValidationException>(() => service.CreateAsync(null!));
         await Assert.ThrowsAsync<BusinessValidationException>(() => service.UpdateAsync(Guid.NewGuid(), null!));
@@ -70,7 +72,7 @@ public class BackendValidationTests
     {
         // Use a fake repository so this test does not need PostgreSQL.
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
-        DocumentService service = new DocumentService(repository.Object, TimeProvider.System);
+        DocumentService service = new DocumentService(repository.Object, TimeProvider.System, NullLogger<DocumentService>.Instance);
 
         await Assert.ThrowsAsync<BusinessValidationException>(() => service.GetByIdAsync(Guid.Empty));
         await Assert.ThrowsAsync<BusinessValidationException>(() => service.DeleteAsync(Guid.Empty));
@@ -92,7 +94,7 @@ public class BackendValidationTests
         // Use a fake repository so this test does not need PostgreSQL.
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
         repository.Setup(r => r.GetByIdAsync(document.Id, It.IsAny<CancellationToken>())).ReturnsAsync(document);
-        DocumentService service = new DocumentService(repository.Object, TimeProvider.System);
+        DocumentService service = new DocumentService(repository.Object, TimeProvider.System, NullLogger<DocumentService>.Instance);
 
         await Assert.ThrowsAsync<BusinessValidationException>(() =>
             service.UpdateAsync(document.Id, new UpdateDocumentCommand("New title", " ")));
@@ -111,7 +113,7 @@ public class BackendValidationTests
     {
         // Use a fake repository so this test does not need PostgreSQL.
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
-        DocumentService service = new DocumentService(repository.Object, TimeProvider.System);
+        DocumentService service = new DocumentService(repository.Object, TimeProvider.System, NullLogger<DocumentService>.Instance);
 
         await Assert.ThrowsAsync<BusinessValidationException>(() =>
             service.AddNoteAsync(Guid.NewGuid(), new CreateNoteCommand(text!)));
@@ -128,7 +130,7 @@ public class BackendValidationTests
     {
         // Use a fake repository so this test does not need PostgreSQL.
         Mock<IDocumentRepository> repository = new Mock<IDocumentRepository>();
-        DocumentService service = new DocumentService(repository.Object, TimeProvider.System);
+        DocumentService service = new DocumentService(repository.Object, TimeProvider.System, NullLogger<DocumentService>.Instance);
         string title = new string('t', 200);
         string fileName = new string('f', 255);
         Document document = await service.CreateAsync(new CreateDocumentCommand(" " + title + " ", fileName));

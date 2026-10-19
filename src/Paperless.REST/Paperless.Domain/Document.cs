@@ -1,8 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace Paperless.Domain;
-
-// Defines the shared document metadata model.
 public class Document
 {
     public Guid Id { get; set; }
