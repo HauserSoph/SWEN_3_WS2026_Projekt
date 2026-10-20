@@ -2,79 +2,78 @@ using AutoMapper;
 using System.Reflection;
 using Paperless.Api.Errors;
 using Paperless.Api.Mapping;
+using Paperless.Api.Messaging;
 using Paperless.Business;
 using Paperless.Dal;
-
-// Contains the application's starting point.
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 public class Program
 {
-    // Sets up the API and starts the web server.
     public static void Main(string[] args)
     {
-        // Creates the builder and reads the application settings.
-        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-        // Registers support for API controllers.
-        builder.Services.AddControllers();
-        // Registers support for standard error responses.
-        builder.Services.AddProblemDetails();
-        // Registers our business error handler.
-        builder.Services.AddExceptionHandler<BusinessExceptionHandler>();
-        // Shares the system clock across the application.
-        builder.Services.AddSingleton(TimeProvider.System);
-        // Uses the named method below to configure AutoMapper.
-        builder.Services.AddAutoMapper(ConfigureMapping);
-        // Creates a business service for each request.
-        builder.Services.AddScoped<IDocumentService, DocumentService>();
-
-        // Reads the existing database connection settings.
-        string? connectionString = builder.Configuration.GetConnectionString("Paperless");
-        // Checks whether the connection settings are missing.
-        if (connectionString == null)
+        // Dieser Standard-Logger kann auch Fehler vor dem Aufbau der Anwendung ausgeben.
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
+        ILogger<Program> logger = loggerFactory.CreateLogger<Program>();
+        try
         {
-            // Stops startup when the required setting is missing.
-            throw new InvalidOperationException("Connection string 'Paperless' missing.");
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+            // ILogger schreibt über den Console-Provider ins Terminal bzw. Docker-Log.
+            builder.Logging.AddConsole();
+            builder.Services.AddControllers();
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                var defaultResponse = options.InvalidModelStateResponseFactory;
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    logger.LogWarning("Warning: API request rejected because the input is invalid.");
+                    return defaultResponse(context);
+                };
+            });
+            builder.Services.AddProblemDetails();
+            builder.Services.AddExceptionHandler<BusinessExceptionHandler>();
+            builder.Services.AddSingleton(TimeProvider.System);
+            builder.Services.AddAutoMapper(ConfigureMapping);
+            builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMQ"));
+            builder.Services.AddSingleton<IDocumentUploadPublisher, RabbitMqDocumentUploadPublisher>();
+            // Scoped bedeutet: innerhalb einer Anfrage dieselbe Instanz.
+            // Der DbContext und das Repository haben dieselbe Lebensdauer.
+            builder.Services.AddScoped<IDocumentService, DocumentService>();
+            string? connectionString = builder.Configuration.GetConnectionString("Paperless");
+            if (connectionString == null)
+            {
+                throw new InvalidOperationException("Connection string 'Paperless' missing.");
+            }
+            DalAssembly.AddDatabase(builder.Services, connectionString);
+            WebApplication app = builder.Build();
+            IMapper mapper = app.Services.GetRequiredService<IMapper>();
+            // Fehlende Mapping-Regeln sollen schon beim Start auffallen, nicht erst bei einer Anfrage.
+            mapper.ConfigurationProvider.AssertConfigurationIsValid();
+            app.UseExceptionHandler();
+            app.MapGet("/health", GetHealth);
+            app.MapControllers();
+            logger.LogInformation("API: Starting web server.");
+            app.Run();
+            logger.LogInformation("API: Web server stopped.");
         }
-        // Calls the existing database setup without changing it.
-        DalAssembly.AddDatabase(builder.Services, connectionString);
-
-        // Builds the application and its dependency container.
-        WebApplication app = builder.Build();
-        // Gets the registered mapper from the container.
-        IMapper mapper = app.Services.GetRequiredService<IMapper>();
-        // Checks that all mapping rules are valid.
-        mapper.ConfigurationProvider.AssertConfigurationIsValid();
-        // Enables the error handler for incoming requests.
-        app.UseExceptionHandler();
-        // Calls GetHealth when a request reaches /health.
-        app.MapGet("/health", GetHealth);
-        // Connects incoming requests to controller methods.
-        app.MapControllers();
-        // Starts the web server.
-        app.Run();
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Error: API could not start or stopped unexpectedly");
+            throw;
+        }
     }
-
-    // Sets up AutoMapper using the existing mapping profile.
     private static void ConfigureMapping(IMapperConfigurationExpression configuration)
     {
-        // Reads the license key from the environment.
         configuration.LicenseKey = Environment.GetEnvironmentVariable("AUTOMAPPER_KEY");
-        // Uses the named method below to select public constructors.
+        // Unsere DTOs und Commands bekommen ihre Werte über öffentliche Konstruktoren.
         configuration.ShouldUseConstructor = IsPublicConstructor;
-        // Adds the existing mapping rules.
         configuration.AddProfile<MappingConfiguration>();
     }
-
-    // Tells AutoMapper whether it may use this constructor.
     private static bool IsPublicConstructor(ConstructorInfo constructor)
     {
-        // Allows public constructors.
         return constructor.IsPublic;
     }
-
-    // Confirms the API is running; this does not check the database.
     private static string GetHealth()
     {
-        // Returns the health response text.
         return "ok";
     }
 }

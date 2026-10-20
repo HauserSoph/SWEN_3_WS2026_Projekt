@@ -12,7 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Paperless.Business\Paperless.Business.csproj" />
+    <ProjectReference Include="..\..\src\Paperless.REST\Paperless.Business\Paperless.Business.csproj" />
+    <ProjectReference Include="..\..\src\Paperless.REST\Paperless.Api\Paperless.Api.csproj" />
+    <ProjectReference Include="..\..\src\Paperless.REST\Paperless.Dal\Paperless.Dal.csproj" />
   </ItemGroup>
 
   <ItemGroup>

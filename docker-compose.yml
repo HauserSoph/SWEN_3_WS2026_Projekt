@@ -5,6 +5,8 @@ services:
       POSTGRES_USER: paperless
       POSTGRES_PASSWORD: paperless
       POSTGRES_DB: paperless
+    volumes:
+      - ./.data/postgres:/var/lib/postgresql/data:rw
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U paperless -d paperless"]
       interval: 2s
@@ -13,16 +15,26 @@ services:
 
   api:
     build: 
-        context: src/Paperless.REST
-        dockerfile: Dockerfile
+        context: .
+        dockerfile: src/Paperless.REST/Dockerfile
     ports:
       - "8080:8080"
+    volumes:
+      - ./.data/uploads:/app/uploads:rw
     environment:
       ConnectionStrings__Paperless: Host=postgres;Port=5432;Database=paperless;Username=paperless;Password=paperless
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__UserName: ${RABBITMQ_USER:-rabbitmq}
+      RabbitMQ__Password: ${RABBITMQ_PASS:-rabbitmq}
+      RabbitMQ__IncomingPath: /app/uploads/incoming
+      RabbitMQ__ProcessedPath: /app/uploads/processed
     depends_on:
       postgres:
         condition: service_healthy
-        
+      rabbitmq:
+        condition: service_healthy
+
   webui:
     build: 
         context: src/Paperless.WebUI
@@ -31,4 +43,37 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      ConnectionStrings__API: Host=localhost;Port=8080
+      API_BASE_URL: ${API_BASE_URL:-http://api:8080}
+    depends_on:
+      api:
+        condition: service_started
+
+  rabbitmq:
+    image: rabbitmq:4.2-rc-management-alpine
+    ports:
+      - 9093:15672 # management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-rabbitmq}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS:-rabbitmq}
+    volumes:
+      - ./.data/rabbitmq:/var/lib/rabbitmq:rw
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  ocrworker:
+    build:
+      context: .
+      dockerfile: src/Paperless.Worker/Paperless.OCRWorker/Dockerfile
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-rabbitmq}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-rabbitmq}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-paperless.document-upload}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy

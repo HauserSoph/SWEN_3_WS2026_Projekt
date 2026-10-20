@@ -1,58 +1,58 @@
-# Paperless WebUI - Schritt 3
+# Paperless WebUI
 
-Den Ordner `Paperless.WebUI` in VS Code öffnen. Im Terminal ausführen:
-
-```powershell
-# Die Angular-Abhängigkeiten installieren
-npm ci
-
-# Den Entwicklungsserver starten
-npm start
-```
-
-Die Seite ist unter http://localhost/ erreichbar.
-Node.js 24.15 oder neuer innerhalb der Version 24 wird benötigt.
-
-Das Formular prüft Titel und Dateiname: Pflichtfelder, Leerzeichen und maximale
-Längen von 200 beziehungsweise 255 Zeichen. Es speichert noch nichts.
-
-Zum Prüfen leere Felder, nur Leerzeichen und gültige Werte ausprobieren.
-Die HTML-Felder begrenzen die Eingabelänge. Die TypeScript-Methode prüft die
-Längen zusätzlich. Bei gültigen Werten wird eine Bestätigung angezeigt.
-
-`package.json` enthält Abhängigkeiten und Startbefehle. `angular.json` legt fest,
-wie Angular gebaut und gestartet wird. `tsconfig.json` enthält die
-TypeScript-Einstellungen. `package.json` erlaubt keine Kommentare;
-`tsconfig.json` enthält kurze Kommentare zu den Einstellungen.
-
-
-```powershell
-# Prüfen, ob die Angular-Anwendung gebaut werden kann
-npm run build
-```
-
-## Dashboard und Detailseiten
-
-Das Dashboard unter `/` zeigt ein Beispieldokument.
-Der Link öffnet `/documents/1`. Unbekannte Dokument-IDs zeigen
-eine Meldung. Die Daten sind nur Beispiele; die REST-Anbindung kommt noch.
-
-`main.ts` ordnet jeder URL eine Komponente zu. `routerLink` wechselt die Seite,
-und `router-outlet` zeigt sie an. Die Detailseite liest die ID mit `ActivatedRoute`.
-Ein einfaches `if` prüft, ob die ID zum Beispieldokument passt.
-Das Beispieldokument steht in `dashboard.component.ts` und wird von der Detailseite importiert.
-Das HTML steht direkt im `template` der jeweiligen Komponente. Das Formular und
-seine Eingabeprüfung befinden sich in `dashboard.component.ts`.
-
-## Mit Nginx starten
+## Mit Docker starten
 
 Im Ordner mit `docker-compose.yml` ausführen:
 
 ```powershell
-docker compose up --build -d webui
+docker compose up --build -d
 ```
 
-Danach http://localhost/ öffnen. Der Dockerfile baut Angular mit Node.js und
-kopiert die fertigen Dateien in den Nginx-Container. Nginx liefert bei Angular-URLs
-die `index.html`, damit auch ein direkter Aufruf oder Neuladen der Detailseite klappt.
+Danach http://localhost/ öffnen. Nginx leitet `/api/` an das Backend weiter.
+Die Adresse steht in `API_BASE_URL` und ist standardmäßig `http://api:8080`.
 
+## Lokal entwickeln
+
+Node.js 24.15 oder neuer innerhalb der Version 24 wird benötigt.
+Im Ordner `src/Paperless.WebUI` ausführen:
+
+```powershell
+npm ci
+npm start
+```
+
+Die Entwicklungsseite ist unter http://localhost/ erreichbar.
+`proxy.conf.json` leitet API-Anfragen an http://localhost/ weiter.
+Das Backend mit PostgreSQL und RabbitMQ muss dafür laufen.
+
+## Dokumente hochladen und anzeigen
+
+Das Dashboard lädt die echten Dokument-Metadaten aus der API.
+Zum Hochladen einen Titel und eine nicht leere Datei auswählen und auf
+„Hochladen“ klicken. Der Titel darf höchstens 200 Zeichen und der Dateiname
+höchstens 255 Zeichen haben. Das Frontend erlaubt Dateien bis 49 MiB, damit
+unter dem API-Limit von 50 MiB noch Platz für die Formulardaten bleibt.
+
+Nach Annahme des Uploads wird die Liste erneut geladen. Der Link eines Dokuments
+öffnet seine Metadaten aus der Datenbank. „Aktualisieren“ lädt die Liste erneut.
+Ladezustände und Fehler werden auf der Seite angezeigt.
+
+Die API speichert die Metadaten und schickt den Verarbeitungsauftrag an RabbitMQ.
+Die Datei wird im Hintergrund verschoben. Die Upload-Bestätigung bedeutet daher
+noch nicht, dass diese Verarbeitung abgeschlossen ist. Ein Verarbeitungsstatus
+und ein Dateidownload sind in dieser Konzeptdemo nicht enthalten.
+
+`document.service.ts` sammelt die HTTP-Anfragen. Die Komponenten enthalten
+weiterhin einfache HTML-Templates und die Eingabeprüfung. Angular-Signale sorgen
+dafür, dass Ergebnisse der asynchronen Anfragen direkt angezeigt werden.
+
+## Prüfen
+
+```powershell
+npm run build
+```
+
+Für einen manuellen Durchlauf eine kleine Datei hochladen, den neuen Eintrag
+öffnen und die Seite neu laden. Der Eintrag muss weiterhin vorhanden sein.
+Die verschobene Datei liegt bei erfolgreicher Hintergrundverarbeitung unter
+`.data/uploads/processed` im Projektordner.

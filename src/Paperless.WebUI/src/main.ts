@@ -1,9 +1,11 @@
 // Angular und unsere Seiten-Komponente laden
+import { provideHttpClient } from '@angular/common/http';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { provideRouter, Routes } from '@angular/router';
 import { DashboardComponent } from './app/dashboard.component';
 import { DocumentDetailComponent } from './app/document-detail.component';
+
 
 // URL-Pfade mit den passenden Seiten verbinden
 const routes: Routes = [
@@ -14,7 +16,7 @@ const routes: Routes = [
 
 // Die Angular-Anwendung starten und Startfehler anzeigen
 bootstrapApplication(AppComponent, {
-    providers: [provideRouter(routes)]
+    providers: [provideRouter(routes), provideHttpClient()]
 }).catch(function (error) {
     console.error(error);
 });

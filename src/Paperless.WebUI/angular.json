@@ -19,7 +19,8 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "buildTarget": "paperless-webui:build"
+            "buildTarget": "paperless-webui:build",
+            "proxyConfig": "proxy.conf.json"
           }
         }
       }
