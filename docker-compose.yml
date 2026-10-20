@@ -63,3 +63,17 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
+  ocrworker:
+    build:
+      context: .
+      dockerfile: src/Paperless.Worker/Paperless.OCRWorker/Dockerfile
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-rabbitmq}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-rabbitmq}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-paperless.document-upload}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
